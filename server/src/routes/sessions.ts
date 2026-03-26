@@ -75,6 +75,81 @@ export function createSessionsRouter(db: SqliteDatabase) {
   const eventsRepository = new EventsRepository(db);
   const router = Router();
 
+  router.post('/upload', upload.single('file'), async (request: Request, response: Response) => {
+    const parsedBody = CreateSessionBodySchema.safeParse(request.body);
+    if (!parsedBody.success) {
+      response.status(400).json({
+        error: 'Invalid request body',
+        issues: parsedBody.error.flatten(),
+      });
+      return;
+    }
+
+    const content = getFileContent(request);
+    if (!content) {
+      response.status(400).json({
+        error: 'Provide either multipart file field "file" or JSON body with "content"',
+      });
+      return;
+    }
+
+    const parsed = await parseLogContent(content.text, content.fileNameHint);
+    if (parsed.events.length === 0) {
+      response.status(400).json({
+        error: 'No valid events found in uploaded content',
+        parseErrors: parsed.errors,
+      });
+      return;
+    }
+
+    const sessionId = randomUUID();
+    const name = parsedBody.data.name ?? parsed.sessionName;
+    const createdAt = new Date().toISOString();
+
+    sessionsRepository.create({
+      id: sessionId,
+      name,
+      createdAt,
+    });
+
+    const normalizedEvents = parsed.events.map((event, index) => ({
+      id: event.id ?? randomUUID(),
+      sessionId,
+      sequence: index + 1,
+      timestamp: event.timestamp,
+      type: event.type,
+      payload: event.payload ?? {},
+      metadata: event.metadata,
+    }));
+
+    eventsRepository.createMany(normalizedEvents);
+
+    const eventTypes = Array.from(new Set(normalizedEvents.map((event) => event.type))).sort();
+    const sortedTimestamps = normalizedEvents
+      .map((event) => new Date(event.timestamp).getTime())
+      .filter((value) => Number.isFinite(value))
+      .sort((left, right) => left - right);
+
+    const startTime = sortedTimestamps.length > 0 ? new Date(sortedTimestamps[0]).toISOString() : null;
+    const endTime =
+      sortedTimestamps.length > 0
+        ? new Date(sortedTimestamps[sortedTimestamps.length - 1]).toISOString()
+        : null;
+
+    const updated = sessionsRepository.updateStats(sessionId, {
+      eventCount: normalizedEvents.length,
+      startTime,
+      endTime,
+      eventTypes,
+    });
+
+    response.status(201).json({
+      session: updated ? toLogSession(updated) : null,
+      importedCount: normalizedEvents.length,
+      parseErrors: parsed.errors,
+    });
+  });
+
   router.post('/', upload.single('file'), async (request: Request, response: Response) => {
     const parsedBody = CreateSessionBodySchema.safeParse(request.body);
     if (!parsedBody.success) {
