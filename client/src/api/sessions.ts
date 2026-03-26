@@ -57,7 +57,10 @@ export function uploadLogFile(
     };
     
     xhr.open('POST', `${API_BASE}/sessions/upload`);
-    xhr.send(file);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    xhr.send(formData);
   });
 }
 
