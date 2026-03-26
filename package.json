@@ -22,6 +22,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4",
+    "react-window": "^2.2.7",
     "supertest": "^7.1.1",
     "zod": "^4.1.11",
     "zustand": "^5.0.0"
@@ -35,6 +36,7 @@
     "@types/node": "^24.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/react-window": "^1.8.8",
     "@types/supertest": "^6.0.3",
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.2.1",
