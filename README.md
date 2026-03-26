@@ -62,6 +62,30 @@ log-replayer/
 - Node.js 18+
 - npm 또는 yarn
 
+#### Windows 사용자 추가 요구사항
+
+Windows 환경에서는 `better-sqlite3` 네이티브 모듈 컴파일을 위해 다음이 필요합니다:
+
+1. **Python 3.x**
+   - Microsoft Store 또는 python.org에서 설치
+   - 설치 시 "Add to PATH" 옵션 선택
+
+2. **Visual Studio Build Tools** (또는 Visual Studio Community)
+   - [다운로드](https://visualstudio.microsoft.com/downloads/)
+   - "C++를 사용한 데스크톱 개발" 워크로드 선택
+   - 또는 최소 설치: Visual C++ Redistributable + Build Tools
+
+3. **Windows용 개발 도구 설치 (선택사항)**
+   ```powershell
+   # 관리자 권한 PowerShell에서
+   npm install --global windows-build-tools
+   ```
+
+**Windows 설치 오류 해결:**
+- `better-sqlite3` 설치 실패 시: `npm install better-sqlite3 --build-from-source`
+- Python 경로 문제: `npm config set python python3`
+- Visual Studio 경로 지정: `npm config set msvs_version 2022`
+
 ### 설정
 
 1. 저장소 클론:
